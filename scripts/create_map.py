@@ -9,7 +9,7 @@ from math import cos, pi, sin
 
 if __name__ == "__main__":
     rospy.init_node('rviz_marker')
-    marker_pub = rospy.Publisher("/visualization_marker", Marker, queue_size=10)
+    marker_pub = rospy.Publisher("/map_marker", Marker, queue_size=10)
 
     # Load map
     map = cv2.imread("./maps/woodward.png", cv2.COLOR_BGR2RGB)
@@ -20,14 +20,17 @@ if __name__ == "__main__":
     print(map_size)
 
 
-    center_point = Point(205.0, 510.0, 0.0)
+    center_point = Point(205.0, 512.0, 0.0)
     rotate_angle = -49.0
+
+    # center_point = Point(float(map_size[1]) / 2.0, float(map_size[0]) / 2.0, 0.0)
+    # rotate_angle = 0.0
 
 
     image = Marker()
     image.header.frame_id = "map"
     image.id = 0
-    image.type = Marker.POINTS
+    image.type = Marker.CUBE_LIST
     image.action = Marker.MODIFY
 
     image.pose.orientation.z = pi / 180.0 * rotate_angle
@@ -62,6 +65,6 @@ if __name__ == "__main__":
             image.points.append(p)
 
 
-    while not rospy.is_shutdown():
-        marker_pub.publish(image)
-        rospy.sleep(1.0)
+    # while not rospy.is_shutdown():
+    marker_pub.publish(image)
+    # rospy.sleep(1.0)
