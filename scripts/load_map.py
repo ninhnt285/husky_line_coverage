@@ -19,12 +19,11 @@ if __name__ == "__main__":
     step = 5
     print(map_size)
 
+    center_point = Point(float(map_size[1]) / 2.0, float(map_size[0]) / 2.0, 0.0)
+    rotate_angle = 0.0
 
     center_point = Point(205.0, 512.0, 0.0)
     rotate_angle = -49.0
-
-    # center_point = Point(float(map_size[1]) / 2.0, float(map_size[0]) / 2.0, 0.0)
-    # rotate_angle = 0.0
 
 
     image = Marker()
