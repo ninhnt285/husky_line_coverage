@@ -159,8 +159,7 @@ class HuskyRobot():
 
     def go_to_point(self, target_point: Point):
         current_point = self.get_current_position()
-        print("  Go from: (", current_point.x, ",", current_point.y, ")")
-        print("  to (", target_point.x, ",", target_point.y, ")")
+        self.print_diff_points(current_point, target_point)
 
         target_angle = self.calculate_angle(self.get_current_position(), target_point)
         diff_angle = self.calculate_diff_angle(self.gps_yaw, target_angle)
@@ -194,5 +193,13 @@ class HuskyRobot():
             last_position = current_point
         
         self.stop_robot()
+        self.print_diff_points(current_point, target_point)
+
+        
+    def print_diff_points(self, current_point: Point, target_point: Point):
+        print("  Current: (", current_point.x, ",", current_point.y, ")")
+        print("  Target: (", target_point.x, ",", target_point.y, ")")
+        print("  Diff: ", target_point.x - current_point.x, target_point.y - current_point.y)
+        print("  Distance: ", self.calculate_distance(current_point, target_point))
 
     

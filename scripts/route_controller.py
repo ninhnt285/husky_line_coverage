@@ -44,12 +44,12 @@ class RouteController():
     def start(self):
         self.robot.relocate()
 
-        for i in range(len(self.routes)):
-            node = self.nodes[self.routes[i]]
-            point = self.get_point_from_node(node)
+        # for i in range(len(self.routes)):
+        #     node = self.nodes[self.routes[i]]
+        #     point = self.get_point_from_node(node)
 
-            print("Move to point " + str(i) + ": ", point.x, point.y )
-            self.robot.go_to_point(point)
+        #     print("Move to point " + str(i) + ": ", point.x, point.y )
+        #     self.robot.go_to_point(point)
 
         # Go back to first node
         node = self.nodes[self.routes[0]]
