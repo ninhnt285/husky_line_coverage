@@ -2,7 +2,9 @@
 
 import rospy
 from route_controller import RouteController
+from husky_robot import HuskyRobot
 
 if __name__ == "__main__":
-    route_controller = RouteController()
+    robot = HuskyRobot()
+    route_controller = RouteController(robot)
     route_controller.start()
