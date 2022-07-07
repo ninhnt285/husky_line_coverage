@@ -1,0 +1,13 @@
+<launch>
+    <arg name="is_simulation" default="true" />
+    <arg name="route_plan" default="ww" />
+
+    <group if="$(arg is_simulation)">
+        <node pkg="husky-line-coverage" name="gps-simulator" type="gps.py"/>
+    </group>
+    
+    
+    <!-- <node pkg="husky-line-coverage" name="run" type="start.py" output="screen">
+        <param name="route_plan" value="$(arg world_name)" />
+    </node> -->
+</launch>
