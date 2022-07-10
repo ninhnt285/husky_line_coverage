@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>husky-line-covering</name>
+  <name>husky_line_coverage</name>
   <version>0.0.0</version>
-  <description>The husky-line-covering package</description>
+  <description>The husky_line_coverage package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -49,6 +49,8 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <exec_depend>rospy</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

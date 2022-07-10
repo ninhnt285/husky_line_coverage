@@ -15,15 +15,20 @@ if __name__ == "__main__":
     map = cv2.imread("./maps/woodward.png", cv2.COLOR_BGR2RGB)
 
     map_size = map.shape
-    scale = 0.2
+    scale = 0.195
     step = 5
     print(map_size)
 
     center_point = Point(float(map_size[1]) / 2.0, float(map_size[0]) / 2.0, 0.0)
     rotate_angle = 0.0
 
-    center_point = Point(205.0, 512.0, 0.0)
-    rotate_angle = -49.0
+    # Default
+    # center_point = Point(205.0, 512.0, 0.0)
+    # rotate_angle = -49.0
+
+    # Lego-LOAM
+    center_point = Point(217.0, 490.0, 0.0)
+    rotate_angle = -27.0
 
 
     image = Marker()
@@ -65,5 +70,6 @@ if __name__ == "__main__":
 
 
     # while not rospy.is_shutdown():
+    rospy.sleep(2)
     marker_pub.publish(image)
     # rospy.sleep(1.0)

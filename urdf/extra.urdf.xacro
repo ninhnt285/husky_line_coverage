@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<robot name="gps_sensor" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <gazebo>
+        <plugin name="gps_controller" filename="libhector_gazebo_ros_gps.so">
+            <alwayson>true</alwayson>
+            <updateRate>40</updateRate>
+            <bodyName>base_link</bodyName>
+            <frameId>base_link</frameId>
+            <topicName>gps/fix</topicName>
+            <velocityTopicName>gps/vel</velocityTopicName>
+            <referenceLatitude>35.307076</referenceLatitude>
+            <referenceLongitude>-80.7343572</referenceLongitude>
+            <referenceHeading>0</referenceHeading>
+            <referenceAltitude>10</referenceAltitude>
+            <!-- <drift>0.0001 0.0001 0.0001</drift> -->
+        </plugin>
+
+        <plugin name="compass_controller" filename="libhector_gazebo_ros_magnetic.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>10.0</updateRate>
+            <bodyName>base_link</bodyName>
+            <robotNamespace>imu_um7</robotNamespace>
+            <topicName>mag</topicName>
+            <offset>0 0 0</offset>
+            <drift>0.0 0.0 0.0</drift>
+            <gaussianNoise>1.3e-2 1.3e-2 1.3e-2</gaussianNoise>
+        </plugin>
+    </gazebo>
+</robot>
