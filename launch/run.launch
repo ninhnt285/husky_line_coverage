@@ -1,5 +1,5 @@
 <launch>
-    <arg name="is_simulation" default="false" />
+    <arg name="is_simulation" default="true" />
     <arg name="route_dir" default="ww" />
 
     <!--Topics Name-->
@@ -18,31 +18,23 @@
 
     <!-- Init Static TF -->
     <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="odom2_init"  args="0 0 0 0 0 0 map odom2_init" /> -->
-
-
-    <!-- Simulation -->
-    <!-- <group if="$(arg is_simulation)">
-        <node pkg="husky_line_coverage" name="gps-simulator" type="gps.py"/>
-    </group> -->
     
-    <!-- <param name="node_file" value="$(arg node_file)" />
-    <param name="route_file" value="$(arg route_file)" /> -->
-
+    
+    <param name="is_simulation" value="$(arg is_simulation)" />
     <param name="node_file" value="$(arg node_file)" />
     <param name="route_file" value="$(arg route_file)" />
-
     <param name="imu_topic" value="$(arg imu_topic)" />
     <param name="gps_topic" value="$(arg gps_topic)" />
     <param name="compass_topic" value="$(arg compass_topic)" />
-
     <param name="custom_odom_topic" value="$(arg custom_odom_topic)" />
     <param name="position_input" value="$(arg position_input)" />
     <param name="orientation_input" value="$(arg orientation_input)" />
+
+    <!-- <group if="$(arg is_simulation)">
+        <node pkg="rviz" type="rviz" name="rviz" args="-d $(find husky_line_coverage)/launch/test.rviz" />
+    </group> -->
     
     <node pkg="husky_line_coverage" name="odom2_controller" type="odom.py" output="screen" />
     <node pkg="husky_line_coverage" name="rviz_supporter" type="rviz.py" output="screen" />
-
-    <!-- <node pkg="husky_line_coverage" name="run" type="start.py" output="screen">
-        <param name="route_plan" value="$(arg world_name)" />
-    </node> -->
+    <node pkg="husky_line_coverage" name="husky_robot" type="husky_robot.py" output="screen" />
 </launch>

@@ -3,7 +3,7 @@
 import rospy
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker
-from std_msgs.msg import ColorRGBA
+from std_msgs.msg import ColorRGBA, Bool
 from husky_line_coverage.helpers import load_routes
 from math import pi, sqrt
 
@@ -13,14 +13,21 @@ class Rviz_Support():
 
         self.node_file = rospy.get_param("node_file", "./maps/node_data")
         self.route_file = rospy.get_param("route_file", "./maps/route")
-
         self.routes = load_routes(self.route_file, self.node_file)
+        
+        self.root_frame = "map"
+
+        # Simulation
+        self.is_simulation = rospy.get_param("is_simulation", False)
+        if self.is_simulation:
+            self.root_frame = "odom"
+
 
     def draw_route(self):
         marker_pub = rospy.Publisher("/route_marker", Marker, queue_size=10)
 
         image = Marker()
-        image.header.frame_id = "map"
+        image.header.frame_id = self.root_frame
         image.id = 0
         image.type = Marker.SPHERE_LIST
         image.action = Marker.MODIFY

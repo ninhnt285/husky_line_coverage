@@ -10,7 +10,8 @@ def load_nodes(node_file="./maps/node_data"):
             nodes[params[0]] = {"lat": float(params[3]), "long": float(params[4])}
     return nodes
 
-
+# Load all routes and convert to UTM
+# Note: included last point
 def load_routes(route_file="./maps/route", node_file="./map/node_data"):
     nodes = load_nodes(node_file)
     routes = []

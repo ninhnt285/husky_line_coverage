@@ -17,8 +17,9 @@ class Odom():
         self.tf_br = tf.TransformBroadcaster()
 
         # Load Params
-        self.position_input = rospy.get_param("position_input", "gps")
-        self.orientation_input = rospy.get_param("orientation_input", "imu")
+        # self.position_input = rospy.get_param("position_input", "gps")
+        # self.orientation_input = rospy.get_param("orientation_input", "imu")
+        self.is_simulation = rospy.get_param("is_simulation", "false")
         self.node_file = rospy.get_param("node_file", "./maps/node_data")
         self.route_file = rospy.get_param("route_file", "./maps/route")
 
@@ -39,6 +40,7 @@ class Odom():
         # Robot
         self.robot_position = Point(0, 0, 0)
         self.robot_orienation = Quaternion(0, 0, 0, 1)
+        print(self.is_simulation)
         
 
     def rotate_point(self, angle: float, p: Point, pivot: Point = Point(0, 0, 0)) -> Point:
@@ -81,38 +83,23 @@ class Odom():
 
     def start(self):
         while not rospy.is_shutdown():
-            try:
-                (trans, rot) = self.tf_listener.lookupTransform("map", "base_loam", rospy.Time(0))
-            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-                self.rate.sleep()
-                continue
-            print(trans)
+            robot_frame = "base_loam"
+            root_frame = "map"
+            if self.is_simulation:
+                robot_frame = "base_link"
+                root_frame = "odom"
 
-            # position = self.calculate_new_position(Point(*trans))
-            position = Point(trans[0] + self.zero_position.x, trans[1] + self.zero_position.y, 0)
-
-            odom2 = Odometry()
-            odom2.header.frame_id = "map"
-            odom2.pose.pose.position = position
-            odom2.pose.pose.orientation = Quaternion(0, 0, 0, 1)
-            self.odom_publisher.publish(odom2)
-
-            self.rate.sleep()
-
-
-    def start2(self):
-        while not rospy.is_shutdown():
             # odom2_init tf
             self.tf_br.sendTransform(
                 (self.zero_position.x, self.zero_position.y, self.zero_position.z),
                 (self.zero_orientation.x, self.zero_orientation.y, self.zero_orientation.z, self.zero_orientation.w),
                 rospy.Time.now(),
                 "map2",
-                "map"
+                root_frame
             )
 
             try:
-                (trans, rot) = self.tf_listener.lookupTransform("map", "base_loam", rospy.Time(0))
+                (trans, rot) = self.tf_listener.lookupTransform(root_frame, robot_frame, rospy.Time(0))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 self.rate.sleep()
                 continue
@@ -130,19 +117,20 @@ class Odom():
 
             # Publish odom2 topic
             try:
-                (trans2, rot2) = self.tf_listener.lookupTransform("map", "robot2", rospy.Time(0))
+                (trans2, rot2) = self.tf_listener.lookupTransform(root_frame, "robot2", rospy.Time(0))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 self.rate.sleep()
                 continue
 
             odom2 = Odometry()
-            odom2.header.frame_id = "map"
+            odom2.header.frame_id = root_frame
             odom2.pose.pose.position = Point(*trans2)
             odom2.pose.pose.orientation = Quaternion(*rot2)
             self.odom_publisher.publish(odom2)
 
             self.rate.sleep()
 
+
 if __name__ == "__main__":
     odom = Odom()
-    odom.start2()
+    odom.start()
