@@ -3,7 +3,7 @@
 import roslib
 import rospy
 import tf
-from geometry_msgs.msg import Twist, Point, Vector3
+from geometry_msgs.msg import Twist, Point, Vector3Stamped
 from sensor_msgs.msg import NavSatFix, Imu, MagneticField
 from tf.transformations import quaternion_from_euler
 from nav_msgs.msg import Odometry
@@ -17,7 +17,7 @@ class Test_Odom():
         self.br = tf.TransformBroadcaster()
 
 
-        self.imu_subscriber = rospy.Subscriber('/imu_um7/mag', MagneticField, self.compass_callback)
+        self.imu_subscriber = rospy.Subscriber('/imu_um7/mag', Vector3Stamped, self.compass_callback)
         self.gps_subscriber = rospy.Subscriber('/gps/fix', NavSatFix, self.gps_callback)
 
         self.odom_publisher = rospy.Publisher("/odom2", Odometry, queue_size=1)
@@ -40,10 +40,15 @@ class Test_Odom():
         self.compass_z = 0.0
 
 
-    def compass_callback(self, msg: MagneticField):
-        self.compass_x = msg.magnetic_field.x
-        self.compass_y = msg.magnetic_field.y
-        self.compass_z = msg.magnetic_field.z
+    # def compass_callback_2(self, msg: MagneticField):
+    #     self.compass_x = msg.magnetic_field.x
+    #     self.compass_y = msg.magnetic_field.y
+    #     self.compass_z = msg.magnetic_field.z
+
+    def compass_callback(self, msg: Vector3Stamped):
+        self.compass_x = msg.vector.x
+        self.compass_y = msg.vector.y
+        self.compass_z = msg.vector.z
 
     def gps_callback(self, msg: NavSatFix):
         self.lat = msg.latitude
@@ -59,38 +64,40 @@ class Test_Odom():
             current_point = self.get_current_position()
             # print(quaternion_from_euler(self.compass_x, self.compass_y, self.compass_z))
 
-            self.br.sendTransform(
-                (0, 0, 0),
-                # quaternion_from_euler(0, 0, radians(-91)),
-                (0, 0, 0, 1),
-                rospy.Time.now(),
-                "map2",
-                "odom"
-            )
+            # self.br.sendTransform(
+            #     (0, 0, 0),
+            #     # quaternion_from_euler(0, 0, radians(-91)),
+            #     (0, 0, 0, 1),
+            #     rospy.Time.now(),
+            #     "map2",
+            #     "odom"
+            # )
 
-            self.br.sendTransform(
-                (current_point.x, current_point.y, 0.0),
-                quaternion_from_euler(0, 0, self.compass_z),
-                # (0, 0, 0, 1),
-                rospy.Time.now(),
-                "robot2",
-                "map2"
-            )
+            # self.br.sendTransform(
+            #     (current_point.x, current_point.y, 0.0),
+            #     quaternion_from_euler(0, 0, self.compass_z),
+            #     # (0, 0, 0, 1),
+            #     rospy.Time.now(),
+            #     "robot2",
+            #     "map2"
+            # )
             self.rate.sleep()
 
+            angle = atan2(self.compass_x, self.compass_y)
+            print(degrees(angle-pi/2))
 
-            q = quaternion_from_euler(self.compass_x, self.compass_y, self.compass_z)
+            q = quaternion_from_euler(0, 0, angle)
 
-            odom = Odometry()
-            odom.header.frame_id = "odom"
-            odom.pose.pose.position.x = current_point.x
-            odom.pose.pose.position.y = current_point.y
-            odom.pose.pose.position.z = 0.0
-            odom.pose.pose.orientation.x = q[0]
-            odom.pose.pose.orientation.y = q[1]
-            odom.pose.pose.orientation.z = q[2]
-            odom.pose.pose.orientation.w = q[3]
-            self.odom_publisher.publish(odom)
+            # odom = Odometry()
+            # odom.header.frame_id = "odom"
+            # odom.pose.pose.position.x = current_point.x
+            # odom.pose.pose.position.y = current_point.y
+            # odom.pose.pose.position.z = 0.0
+            # odom.pose.pose.orientation.x = q[0]
+            # odom.pose.pose.orientation.y = q[1]
+            # odom.pose.pose.orientation.z = q[2]
+            # odom.pose.pose.orientation.w = q[3]
+            # self.odom_publisher.publish(odom)
 
 if __name__ == "__main__":
     rospy.init_node("test_odom", anonymous=True)

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from turtle import distance
-from xmlrpc.client import Boolean
 import rospy
 from std_msgs.msg import Header, Bool
 from genpy import Time
@@ -11,11 +10,12 @@ from tf.transformations import euler_from_quaternion
 from math import atan2, degrees, pi, radians, sqrt
 from husky_line_coverage.helpers import load_routes
 
-DISTANCE_EPSILON = 1e-4
-ANGULAR_EPSILON = radians(15)
+DISTANCE_EPSILON = 0.4
+ANGULAR_EPSILON = radians(4)
 
-LINEAR_SPEED = 0.5
-ANGULAR_SPEED = 0.3
+LINEAR_SPEED = 0.4
+ANGULAR_SPEED = radians(8)
+ANGULAR_LOW_SPEED = radians(2)
 
 class HuskyRobot():
     def __init__(self) -> None:
@@ -67,10 +67,10 @@ class HuskyRobot():
     
 
     # Helpers
-    def is_running(self) -> Boolean:
+    def is_running(self) -> bool:
         return not self.ctrl_c
 
-    def is_pause(self) -> Boolean:
+    def is_pause(self) -> bool:
         return self.is_pause
 
     def get_current_position(self) -> Point:
@@ -104,15 +104,19 @@ class HuskyRobot():
     def rotate(self, angle):
         print("  - Rotate ", angle)
         rotated_angle = 0.0
-        self.cmd.angular.z = ANGULAR_SPEED if angle < 0 else -ANGULAR_SPEED
+        target_angle = self.yaw + angle
         last_yaw = self.yaw
 
         while rotated_angle < abs(angle) and self.is_running():
             if self.is_pause:
                 self.rate.sleep()
                 continue
-
+            
+            self.cmd.angular.z = min(ANGULAR_SPEED, max(abs(self.yaw - target_angle), 0.1))
+            if angle < 0:
+                self.cmd.angular.z = -self.cmd.angular.z
             self.vel_publisher.publish(self.cmd)
+
             self.rate.sleep()
             rotated_angle += abs(self.yaw - last_yaw)
             last_yaw = self.yaw
@@ -121,6 +125,7 @@ class HuskyRobot():
 
     def go_to_point(self, target_point: Point):
         current_point = self.get_current_position()
+        print("Move to:", target_point.x, target_point.y)
         print("Current point: ", current_point.x, current_point.y)
 
         # Rotate robot to next point
@@ -132,12 +137,15 @@ class HuskyRobot():
         # Calculate distance to next point
         current_point = self.get_current_position()
         diff_distance = self.calculate_distance(current_point, target_point)
-        max_distance = 1.2 * diff_distance
+        last_diff_distance = diff_distance + 0.1
+        max_distance = 1.01 * diff_distance
         last_position = current_point
         print("  - Distance to next point: ", diff_distance)
 
         d = 0.0
-        while d < max_distance and diff_distance > DISTANCE_EPSILON and self.is_running():
+        while (d < max_distance 
+            and diff_distance > DISTANCE_EPSILON
+            and self.is_running()):
             # Check if pause
             if self.is_pause:
                 self.rate.sleep()
@@ -151,7 +159,7 @@ class HuskyRobot():
             # print("  ", degrees(self.yaw), degrees(target_angle), degrees(diff_angle))
 
             if abs(diff_angle) > ANGULAR_EPSILON:
-                self.cmd.angular.z = ANGULAR_SPEED if diff_angle > 0 else -ANGULAR_SPEED
+                self.cmd.angular.z = ANGULAR_LOW_SPEED if diff_angle > 0 else -ANGULAR_LOW_SPEED
             else:
                 self.cmd.angular.z = 0.0
             # Move robot
@@ -160,6 +168,7 @@ class HuskyRobot():
             # Recalcualte distance
             current_point = self.get_current_position()
             d += self.calculate_distance(last_position, current_point)
+            last_diff_distance = diff_distance
             diff_distance = self.calculate_distance(current_point, target_point)
             last_position = current_point
         
@@ -174,13 +183,15 @@ class HuskyRobot():
         print("  Distance: ", self.calculate_distance(current_point, target_point))
         
     def start(self):
+        rospy.wait_for_message("/odom2", Odometry)
+        rospy.wait_for_message("/is_pause", Bool)
+
         zero_x = self.routes[0]["x"]
         zero_y = self.routes[0]["y"]
 
         for i in range(len(self.routes)):
             node = self.routes[i]
             point = Point(node["x"] - zero_x, node["y"] - zero_y, 0)
-            print("Move to:", point.x, point.y)
             self.go_to_point(point)
 
 if __name__ == "__main__":

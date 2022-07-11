@@ -160,6 +160,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/odom.py
   scripts/rviz.py
+  scripts/joystick.py
   scripts/husky_robot.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

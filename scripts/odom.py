@@ -40,7 +40,6 @@ class Odom():
         # Robot
         self.robot_position = Point(0, 0, 0)
         self.robot_orienation = Quaternion(0, 0, 0, 1)
-        print(self.is_simulation)
         
 
     def rotate_point(self, angle: float, p: Point, pivot: Point = Point(0, 0, 0)) -> Point:
@@ -62,18 +61,27 @@ class Odom():
         q = msg.pose.pose.orientation
         (_, _, yaw) = euler_from_quaternion([q.x, q.y, q.z, q.w])
 
+        old_position = self.robot_position
         new_position = msg.pose.pose.position
+
+        # print("Robot Position: ", old_position.x, old_position.y)
+        # print("New Position:", new_position.x, new_position.y)
 
         # Re-calculate odom2_init
         robot_q = self.robot_orienation
         (_, _, robot_yaw) = euler_from_quaternion([robot_q.x, robot_q.y, robot_q.z, robot_q.w])
         angle = yaw - robot_yaw
-        rotated_point = self.rotate_point(angle, Point(0, 0, 0), self.robot_position)
+        # print("Yaw: ", yaw, robot_yaw)
+        # print("Rotate Angle: ", angle)
+        rotated_point = self.rotate_point(angle, Point(0, 0, 0), old_position)
+        # print("Rotated Point:", rotated_point.x, rotated_point.y)
 
         zero_q = quaternion_from_euler(0, 0, angle)
         self.zero_yaw = angle
-        self.zero_position = Point(rotated_point.x + new_position.x, rotated_point.y + new_position.y, 0)
+        self.zero_position = Point(rotated_point.x + new_position.x - old_position.x, rotated_point.y + new_position.y - old_position.y, 0)
+        # print("New zero point:", self.zero_position.x, self.zero_position.y)
         self.zero_orientation = Quaternion(*zero_q)
+
 
     ## Functions
     def calculate_new_position(self, p: Point):
