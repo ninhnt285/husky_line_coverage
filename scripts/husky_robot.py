@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from operator import truediv
 from turtle import distance
 import rospy
 from std_msgs.msg import Header, Bool
@@ -13,8 +14,10 @@ from husky_line_coverage.helpers import load_routes
 DISTANCE_EPSILON = 0.4
 ANGULAR_EPSILON = radians(4)
 
-LINEAR_SPEED = 0.4
-ANGULAR_SPEED = radians(8)
+LINEAR_SPEED = 0.3
+LINEAR_LOW_SPEED = 0.1
+
+ANGULAR_SPEED = radians(10)
 ANGULAR_LOW_SPEED = radians(2)
 
 class HuskyRobot():
@@ -123,16 +126,47 @@ class HuskyRobot():
         
         self.stop_robot()
 
+    def rotate_to_point(self, target_point: Point):
+        while self.is_running():
+            if self.is_pause:
+                self.rate.sleep()
+                continue
+            # Calculate different angular
+            current_point = self.get_current_position()
+            target_angle = self.calculate_angle(current_point, target_point)
+            diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
+            # Set break point
+            if abs(diff_angle) < ANGULAR_EPSILON:
+                break
+            # Calculate angular cmd
+            self.cmd.angular.z = min(ANGULAR_SPEED, max(abs(diff_angle), ANGULAR_LOW_SPEED))
+            if diff_angle < 0:
+                self.cmd.angular.z = -self.cmd.angular.z
+            # Rotate robot
+            self.vel_publisher.publish(self.cmd)
+            self.rate.sleep()
+
+        self.stop_robot()
+
+
     def go_to_point(self, target_point: Point):
         current_point = self.get_current_position()
+        print("-----------")
         print("Move to:", target_point.x, target_point.y)
         print("Current point: ", current_point.x, current_point.y)
 
-        # Rotate robot to next point
-        target_angle = self.calculate_angle(current_point, target_point)
-        diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
-        # print("  ", degrees(self.gps_yaw), degrees(target_angle), degrees(diff_angle))
-        self.rotate(diff_angle)
+        current_point = self.get_current_position()
+        diff_distance = self.calculate_distance(current_point, target_point)
+        if diff_distance < DISTANCE_EPSILON:
+            return
+
+        # Rotate robot to next point (OLD)
+        # target_angle = self.calculate_angle(current_point, target_point)
+        # diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
+        # # print("  ", degrees(self.gps_yaw), degrees(target_angle), degrees(diff_angle))
+        # self.rotate(diff_angle)
+
+        self.rotate_to_point(target_point)
 
         # Calculate distance to next point
         current_point = self.get_current_position()
@@ -152,16 +186,18 @@ class HuskyRobot():
                 continue
 
             # Calculate linear vel
-            self.cmd.linear.x = LINEAR_SPEED
+            self.cmd.linear.x = min(LINEAR_SPEED, max(diff_distance, LINEAR_LOW_SPEED))
+            
+
             # Calculate angular vel
             target_angle = self.calculate_angle(current_point, target_point)
             diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
             # print("  ", degrees(self.yaw), degrees(target_angle), degrees(diff_angle))
-
             if abs(diff_angle) > ANGULAR_EPSILON:
                 self.cmd.angular.z = ANGULAR_LOW_SPEED if diff_angle > 0 else -ANGULAR_LOW_SPEED
             else:
                 self.cmd.angular.z = 0.0
+            
             # Move robot
             self.vel_publisher.publish(self.cmd)
             self.rate.sleep()
@@ -179,7 +215,7 @@ class HuskyRobot():
     def print_diff_points(self, current_point: Point, target_point: Point):
         print("  Current: (", current_point.x, ",", current_point.y, ")")
         print("  Target: (", target_point.x, ",", target_point.y, ")")
-        print("  Diff: ", target_point.x - current_point.x, target_point.y - current_point.y)
+        print("  Diff(x,y): ", target_point.x - current_point.x, target_point.y - current_point.y)
         print("  Distance: ", self.calculate_distance(current_point, target_point))
         
     def start(self):

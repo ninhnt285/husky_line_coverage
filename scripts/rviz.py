@@ -61,7 +61,7 @@ class Rviz_Support():
                 p.z = 0
                 image.points.append(p)
 
-        rospy.sleep(1)
+        rospy.sleep(3)
         marker_pub.publish(image)
 
 

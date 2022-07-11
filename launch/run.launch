@@ -3,6 +3,7 @@
     <arg name="route_dir" default="ww" />
 
     <!--Topics Name-->
+    <arg name="joy_topic" default="/joy_teleop/joy" />
     <arg name="imu_topic" default="/imu/data" />
     <arg name="gps_topic" default="/gps/fix" />
     <arg name="compass_topic" default="/imu_um7/mag" />
@@ -21,12 +22,16 @@
     
     
     <param name="is_simulation" value="$(arg is_simulation)" />
+
     <param name="node_file" value="$(arg node_file)" />
     <param name="route_file" value="$(arg route_file)" />
+    
     <param name="imu_topic" value="$(arg imu_topic)" />
     <param name="gps_topic" value="$(arg gps_topic)" />
     <param name="compass_topic" value="$(arg compass_topic)" />
     <param name="custom_odom_topic" value="$(arg custom_odom_topic)" />
+    <param name="joy_topic" value="$(arg joy_topic)" />
+
     <param name="position_input" value="$(arg position_input)" />
     <param name="orientation_input" value="$(arg orientation_input)" />
 
@@ -34,7 +39,8 @@
         <node pkg="rviz" type="rviz" name="rviz" args="-d $(find husky_line_coverage)/launch/test2.rviz" />
     </group>
     
+    <node pkg="husky_line_coverage" name="joy_controller" type="joystick.py" output="screen" />
     <node pkg="husky_line_coverage" name="odom2_controller" type="odom.py" output="screen" />
-    <node pkg="husky_line_coverage" name="rviz_supporter" type="rviz.py" output="screen" />
     <node pkg="husky_line_coverage" name="husky_robot" type="husky_robot.py" output="screen" />
+    <node pkg="husky_line_coverage" name="rviz_supporter" type="rviz.py" output="screen" />
 </launch>
