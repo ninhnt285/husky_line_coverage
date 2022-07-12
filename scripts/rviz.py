@@ -24,7 +24,7 @@ class Rviz_Support():
 
 
     def draw_route(self):
-        marker_pub = rospy.Publisher("/route_marker", Marker, queue_size=10)
+        marker_pub = rospy.Publisher("route_marker", Marker, queue_size=10)
 
         image = Marker()
         image.header.frame_id = self.root_frame

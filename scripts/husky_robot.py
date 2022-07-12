@@ -14,10 +14,10 @@ from husky_line_coverage.helpers import load_routes
 DISTANCE_EPSILON = 0.4
 ANGULAR_EPSILON = radians(5)
 
-LINEAR_SPEED = 0.3
+LINEAR_SPEED = 0.5
 LINEAR_LOW_SPEED = 0.1
 
-ANGULAR_SPEED = radians(8)
+ANGULAR_SPEED = radians(12)
 ANGULAR_LOW_SPEED = radians(2)
 
 class HuskyRobot():
@@ -186,7 +186,7 @@ class HuskyRobot():
                 continue
 
             # Calculate linear vel
-            self.cmd.linear.x = min(LINEAR_SPEED, max(diff_distance, LINEAR_LOW_SPEED))
+            self.cmd.linear.x = min(LINEAR_SPEED, max(diff_distance/2.0, LINEAR_LOW_SPEED))
             
             # Calculate angular vel
             target_angle = self.calculate_angle(current_point, target_point)
