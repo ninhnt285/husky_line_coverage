@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Grid1
         - /Navigation1/Exploration1
         - /Odometry1
       Splitter Ratio: 0.49492400884628296
@@ -35,7 +36,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 1
+      Cell Size: 5
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -604,10 +605,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 22.533906936645508
+      Scale: 43.00741195678711
       Target Frame: robot2
-      X: 0
-      Y: 0
+      X: 0.4498474597930908
+      Y: -1.8183915615081787
     Saved: ~
 Window Geometry:
   Displays:

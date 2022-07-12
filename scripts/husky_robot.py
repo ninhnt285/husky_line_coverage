@@ -12,12 +12,12 @@ from math import atan2, degrees, pi, radians, sqrt
 from husky_line_coverage.helpers import load_routes
 
 DISTANCE_EPSILON = 0.4
-ANGULAR_EPSILON = radians(4)
+ANGULAR_EPSILON = radians(5)
 
 LINEAR_SPEED = 0.3
 LINEAR_LOW_SPEED = 0.1
 
-ANGULAR_SPEED = radians(10)
+ANGULAR_SPEED = radians(8)
 ANGULAR_LOW_SPEED = radians(2)
 
 class HuskyRobot():
@@ -38,7 +38,7 @@ class HuskyRobot():
         rospy.on_shutdown(self.shutdown_hook)
 
         # Vars
-        self.rate = rospy.Rate(10)
+        self.rate = rospy.Rate(5)
         self.ctrl_c = False
         self.is_pause = True
 
@@ -139,7 +139,7 @@ class HuskyRobot():
             if abs(diff_angle) < ANGULAR_EPSILON:
                 break
             # Calculate angular cmd
-            self.cmd.angular.z = min(ANGULAR_SPEED, max(abs(diff_angle), ANGULAR_LOW_SPEED))
+            self.cmd.angular.z = min(ANGULAR_SPEED, max(abs(abs(diff_angle) - ANGULAR_SPEED), ANGULAR_LOW_SPEED))
             if diff_angle < 0:
                 self.cmd.angular.z = -self.cmd.angular.z
             # Rotate robot
@@ -188,12 +188,11 @@ class HuskyRobot():
             # Calculate linear vel
             self.cmd.linear.x = min(LINEAR_SPEED, max(diff_distance, LINEAR_LOW_SPEED))
             
-
             # Calculate angular vel
             target_angle = self.calculate_angle(current_point, target_point)
             diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
             # print("  ", degrees(self.yaw), degrees(target_angle), degrees(diff_angle))
-            if abs(diff_angle) > ANGULAR_EPSILON:
+            if abs(diff_angle) > radians(3):
                 self.cmd.angular.z = ANGULAR_LOW_SPEED if diff_angle > 0 else -ANGULAR_LOW_SPEED
             else:
                 self.cmd.angular.z = 0.0
