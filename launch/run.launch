@@ -1,7 +1,7 @@
 <launch>
     <arg name="on_robot" default="false" />
     <arg name="is_simulation" default="false" />
-    <arg name="route_dir" default="ww" />
+    <arg name="route_dir" default="ww2" />
 
     <!--Topics Name-->
     <arg name="joy_topic" default="/joy_teleop/joy" />
@@ -15,9 +15,9 @@
     <arg name="custom_odom_topic" default="odom2" />
 
     <!-- Data File -->
-    <arg name="node_file" default="$(find husky_line_coverage)/maps/node_data" />
-    <!-- <arg name="route_file" default="$(find husky_line_coverage)/maps/route" /> -->
-    <arg name="route_file" default="$(find husky_line_coverage)/maps/ww_circle/full.json" />
+    <arg name="node_file" default="$(find husky_line_coverage)/maps/ww2/node_data" />
+    <arg name="route_file" default="$(find husky_line_coverage)/maps/ww2/route" />
+    <!-- <arg name="route_file" default="$(find husky_line_coverage)/maps/ww2/full.json" /> -->
 
     <!-- Init Static TF -->
     <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="odom2_init"  args="0 0 0 0 0 0 map odom2_init" /> -->
