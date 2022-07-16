@@ -11,14 +11,26 @@ from tf.transformations import euler_from_quaternion
 from math import atan2, degrees, pi, radians, sqrt
 from husky_line_coverage.helpers import load_routes
 
-DISTANCE_EPSILON = 0.4
-ANGULAR_EPSILON = radians(5)
 
-LINEAR_SPEED = 0.5
-LINEAR_LOW_SPEED = 0.2
+    # <arg name="distance_epsilon" default="0.25" />
+    # <arg name="linear_max_speed" default="1.0" />
+    # <arg name="linear_min_speed" default="0.2" />
+    # <arg name="linear_speed_step" default="0.2" />
 
-ANGULAR_SPEED = radians(12)
-ANGULAR_LOW_SPEED = radians(2)
+    # <arg name="angular_epsilon_degree" default="1.5" />
+    # <arg name="angular_moving_epsilon_degree" default="1.0" />
+    # <arg name="angular_max_speed_degree" default="20" />
+    # <arg name="angular_min_speed_degree" default="3" />
+
+DISTANCE_EPSILON = rospy.get_param("distance_epsilon")
+LINEAR_MAX_SPEED = rospy.get_param("linear_max_speed")
+LINEAR_MIN_SPEED = rospy.get_param("linear_min_speed")
+LINEAR_SPEED_STEP = rospy.get_param("linear_speed_step")
+
+ANGULAR_EPSILON = radians(rospy.get_param("angular_epsilon_degree"))
+ANGULAR_MOVING_EPSILON = radians(rospy.get_param("angular_moving_epsilon_degree"))
+ANGULAR_MAX_SPEED = radians(rospy.get_param("angular_max_speed_degree"))
+ANGULAR_MIN_SPEED = radians(rospy.get_param("angular_min_speed_degree"))
 
 class HuskyRobot():
     def __init__(self) -> None:
@@ -38,7 +50,7 @@ class HuskyRobot():
         rospy.on_shutdown(self.shutdown_hook)
 
         # Vars
-        self.rate = rospy.Rate(5)
+        self.rate = rospy.Rate(2)
         self.ctrl_c = False
         self.is_pause = True
 
@@ -95,6 +107,7 @@ class HuskyRobot():
         while res < -pi:
             res += 2.0 * pi
         return res
+    
 
     # Control robots
     def stop_robot(self) -> None:
@@ -103,28 +116,31 @@ class HuskyRobot():
         self.vel_publisher.publish(self.cmd)
         self.rate.sleep()
 
-    # Rotate robot
-    def rotate(self, angle):
-        print("  - Rotate ", angle)
-        rotated_angle = 0.0
-        target_angle = self.yaw + angle
-        last_yaw = self.yaw
+    def calculate_angular_vel(self, diff_angle, is_moving=False):
+        if is_moving:
+            return diff_angle
 
-        while rotated_angle < abs(angle) and self.is_running():
-            if self.is_pause:
-                self.rate.sleep()
-                continue
-            
-            self.cmd.angular.z = min(ANGULAR_SPEED, max(abs(self.yaw - target_angle), 0.1))
-            if angle < 0:
-                self.cmd.angular.z = -self.cmd.angular.z
-            self.vel_publisher.publish(self.cmd)
+        speed = min(ANGULAR_MAX_SPEED, abs(diff_angle) / 1.5)
+        if abs(diff_angle) - ANGULAR_MAX_SPEED*0.75 < 0:
+            speed = ANGULAR_MIN_SPEED
 
-            self.rate.sleep()
-            rotated_angle += abs(self.yaw - last_yaw)
-            last_yaw = self.yaw
-        
-        self.stop_robot()
+        if diff_angle < 0:
+            speed = -speed
+
+        return speed
+
+    def calculate_linear_vel(self, diff_distance, current_speed):
+        speed = LINEAR_MAX_SPEED
+        if diff_distance - speed < 0:
+            speed = LINEAR_MIN_SPEED
+
+        if diff_distance < LINEAR_MIN_SPEED:
+            speed = min(diff_distance, 0.1)
+
+        if current_speed + LINEAR_SPEED_STEP < speed:
+            speed = current_speed + LINEAR_SPEED_STEP
+
+        return speed
 
     def rotate_to_point(self, target_point: Point):
         while self.is_running():
@@ -139,9 +155,7 @@ class HuskyRobot():
             if abs(diff_angle) < ANGULAR_EPSILON:
                 break
             # Calculate angular cmd
-            self.cmd.angular.z = min(ANGULAR_SPEED, max(abs(abs(diff_angle) - ANGULAR_SPEED), ANGULAR_LOW_SPEED))
-            if diff_angle < 0:
-                self.cmd.angular.z = -self.cmd.angular.z
+            self.cmd.angular.z = self.calculate_angular_vel(diff_angle)
             # Rotate robot
             self.vel_publisher.publish(self.cmd)
             self.rate.sleep()
@@ -160,12 +174,7 @@ class HuskyRobot():
         if diff_distance < DISTANCE_EPSILON:
             return
 
-        # Rotate robot to next point (OLD)
-        # target_angle = self.calculate_angle(current_point, target_point)
-        # diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
-        # # print("  ", degrees(self.gps_yaw), degrees(target_angle), degrees(diff_angle))
-        # self.rotate(diff_angle)
-
+        print("  Rotate to next point: ", diff_distance)
         self.rotate_to_point(target_point)
 
         # Calculate distance to next point
@@ -174,7 +183,7 @@ class HuskyRobot():
         last_diff_distance = diff_distance + 0.1
         max_distance = 1.01 * diff_distance
         last_position = current_point
-        print("  - Distance to next point: ", diff_distance)
+        print("  Distance to next point: ", diff_distance)
 
         d = 0.0
         while (d < max_distance 
@@ -186,14 +195,14 @@ class HuskyRobot():
                 continue
 
             # Calculate linear vel
-            self.cmd.linear.x = min(LINEAR_SPEED, max(diff_distance/2.0, LINEAR_LOW_SPEED))
+            self.cmd.linear.x = self.calculate_linear_vel(diff_distance, self.cmd.linear.x)
             
             # Calculate angular vel
             target_angle = self.calculate_angle(current_point, target_point)
             diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
-            # print("  ", degrees(self.yaw), degrees(target_angle), degrees(diff_angle))
-            if abs(diff_angle) > radians(3):
-                self.cmd.angular.z = ANGULAR_LOW_SPEED if diff_angle > 0 else -ANGULAR_LOW_SPEED
+            
+            if abs(diff_angle) > ANGULAR_MOVING_EPSILON:
+                self.cmd.angular.z = self.calculate_angular_vel(diff_angle, is_moving=True)
             else:
                 self.cmd.angular.z = 0.0
             
@@ -212,10 +221,10 @@ class HuskyRobot():
 
         
     def print_diff_points(self, current_point: Point, target_point: Point):
-        print("  Current: (", current_point.x, ",", current_point.y, ")")
-        print("  Target: (", target_point.x, ",", target_point.y, ")")
-        print("  Diff(x,y): ", target_point.x - current_point.x, target_point.y - current_point.y)
-        print("  Distance: ", self.calculate_distance(current_point, target_point))
+        print("  - Current: (", current_point.x, ",", current_point.y, ")")
+        print("  - Target: (", target_point.x, ",", target_point.y, ")")
+        print("  - Diff(x,y): ", target_point.x - current_point.x, target_point.y - current_point.y)
+        print("  - Distance: ", self.calculate_distance(current_point, target_point))
         
     def start(self):
         rospy.wait_for_message("/odom2", Odometry)

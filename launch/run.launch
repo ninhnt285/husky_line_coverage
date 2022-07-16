@@ -3,6 +3,18 @@
     <arg name="is_simulation" default="false" />
     <arg name="route_dir" default="ww2" />
 
+    <!-- Robot Speeds -->
+    <arg name="distance_epsilon" default="0.25" />
+    <arg name="linear_max_speed" default="1.0" />
+    <arg name="linear_min_speed" default="0.2" />
+    <arg name="linear_speed_step" default="0.2" />
+
+    <arg name="angular_epsilon_degree" default="1.5" />
+    <arg name="angular_moving_epsilon_degree" default="1.0" />
+    <arg name="angular_max_speed_degree" default="20" />
+    <arg name="angular_min_speed_degree" default="5" />
+
+
     <!--Topics Name-->
     <arg name="joy_topic" default="/joy_teleop/joy" />
     <arg name="imu_topic" default="/imu/data" />
@@ -18,11 +30,8 @@
     <arg name="node_file" default="$(find husky_line_coverage)/maps/ww2/node_data" />
     <arg name="route_file" default="$(find husky_line_coverage)/maps/ww2/route" />
     <!-- <arg name="route_file" default="$(find husky_line_coverage)/maps/ww2/full.json" /> -->
-
-    <!-- Init Static TF -->
-    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="odom2_init"  args="0 0 0 0 0 0 map odom2_init" /> -->
     
-    
+    <!-- Params -->
     <param name="is_simulation" value="$(arg is_simulation)" />
 
     <param name="node_file" value="$(arg node_file)" />
@@ -36,6 +45,17 @@
 
     <param name="position_input" value="$(arg position_input)" />
     <param name="orientation_input" value="$(arg orientation_input)" />
+
+    <param name="distance_epsilon" value="$(arg distance_epsilon)" />
+    <param name="linear_max_speed" value="$(arg linear_max_speed)" />
+    <param name="linear_min_speed" value="$(arg linear_min_speed)" />
+    <param name="linear_speed_step" value="$(arg linear_speed_step)" />
+
+    <param name="angular_epsilon_degree" value="$(arg angular_epsilon_degree)" />
+    <param name="angular_moving_epsilon_degree" value="$(arg angular_moving_epsilon_degree)" />
+    <param name="angular_max_speed_degree" value="$(arg angular_max_speed_degree)" />
+    <param name="angular_min_speed_degree" value="$(arg angular_min_speed_degree)" />
+
 
     <group if="$(arg is_simulation)">
         <node pkg="rviz" type="rviz" name="rviz" args="-d $(find husky_line_coverage)/launch/gazebo.rviz" />
