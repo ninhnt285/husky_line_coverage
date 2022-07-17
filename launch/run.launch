@@ -3,16 +3,17 @@
     <arg name="is_simulation" default="false" />
     <arg name="route_dir" default="ww2" />
 
+    <arg name="time_rate" default="20" />
     <!-- Robot Speeds -->
-    <arg name="distance_epsilon" default="0.25" />
+    <arg name="distance_epsilon" default="0.1" />
     <arg name="linear_max_speed" default="1.0" />
-    <arg name="linear_min_speed" default="0.2" />
-    <arg name="linear_speed_step" default="0.2" />
+    <arg name="linear_min_speed" default="0.1" />
+    <arg name="linear_speed_step" default="0.1" />
 
     <arg name="angular_epsilon_degree" default="1.5" />
     <arg name="angular_moving_epsilon_degree" default="1.0" />
-    <arg name="angular_max_speed_degree" default="20" />
-    <arg name="angular_min_speed_degree" default="5" />
+    <arg name="angular_max_speed_degree" default="30" />
+    <arg name="angular_min_speed_degree" default="3" />
 
 
     <!--Topics Name-->
@@ -33,6 +34,7 @@
     
     <!-- Params -->
     <param name="is_simulation" value="$(arg is_simulation)" />
+    <param name="time_rate" value="$(arg time_rate)" />
 
     <param name="node_file" value="$(arg node_file)" />
     <param name="route_file" value="$(arg route_file)" />

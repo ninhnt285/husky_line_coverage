@@ -30,7 +30,7 @@ class Odom():
         self.odom_publisher = rospy.Publisher("/odom2", Odometry, queue_size=1)
 
         # Variables
-        self.rate = rospy.Rate(1)
+        self.rate = rospy.Rate(rospy.get_param("time_rate", 30))
 
         # New Coords
         self.zero_position = Point(0, 0, 0)

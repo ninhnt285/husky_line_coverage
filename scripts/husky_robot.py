@@ -12,16 +12,6 @@ from math import atan2, degrees, pi, radians, sqrt
 from husky_line_coverage.helpers import load_routes
 
 
-    # <arg name="distance_epsilon" default="0.25" />
-    # <arg name="linear_max_speed" default="1.0" />
-    # <arg name="linear_min_speed" default="0.2" />
-    # <arg name="linear_speed_step" default="0.2" />
-
-    # <arg name="angular_epsilon_degree" default="1.5" />
-    # <arg name="angular_moving_epsilon_degree" default="1.0" />
-    # <arg name="angular_max_speed_degree" default="20" />
-    # <arg name="angular_min_speed_degree" default="3" />
-
 DISTANCE_EPSILON = rospy.get_param("distance_epsilon")
 LINEAR_MAX_SPEED = rospy.get_param("linear_max_speed")
 LINEAR_MIN_SPEED = rospy.get_param("linear_min_speed")
@@ -50,7 +40,7 @@ class HuskyRobot():
         rospy.on_shutdown(self.shutdown_hook)
 
         # Vars
-        self.rate = rospy.Rate(2)
+        self.rate = rospy.Rate(rospy.get_param("time_rate", 30))
         self.ctrl_c = False
         self.is_pause = True
 
@@ -117,11 +107,11 @@ class HuskyRobot():
         self.rate.sleep()
 
     def calculate_angular_vel(self, diff_angle, is_moving=False):
-        if is_moving:
-            return diff_angle
+        speed = abs(diff_angle) * 0.5
+        
+        speed = min(ANGULAR_MAX_SPEED, speed)
 
-        speed = min(ANGULAR_MAX_SPEED, abs(diff_angle) / 1.5)
-        if abs(diff_angle) - ANGULAR_MAX_SPEED*0.75 < 0:
+        if not is_moving and speed < ANGULAR_MIN_SPEED:
             speed = ANGULAR_MIN_SPEED
 
         if diff_angle < 0:
@@ -130,12 +120,10 @@ class HuskyRobot():
         return speed
 
     def calculate_linear_vel(self, diff_distance, current_speed):
-        speed = LINEAR_MAX_SPEED
-        if diff_distance - speed < 0:
-            speed = LINEAR_MIN_SPEED
+        speed = diff_distance * 0.5
 
-        if diff_distance < LINEAR_MIN_SPEED:
-            speed = min(diff_distance, 0.1)
+        if speed > LINEAR_MAX_SPEED:
+            speed = LINEAR_MAX_SPEED
 
         if current_speed + LINEAR_SPEED_STEP < speed:
             speed = current_speed + LINEAR_SPEED_STEP
@@ -180,14 +168,11 @@ class HuskyRobot():
         # Calculate distance to next point
         current_point = self.get_current_position()
         diff_distance = self.calculate_distance(current_point, target_point)
-        last_diff_distance = diff_distance + 0.1
-        max_distance = 1.01 * diff_distance
         last_position = current_point
         print("  Distance to next point: ", diff_distance)
 
         d = 0.0
-        while (d < max_distance 
-            and diff_distance > DISTANCE_EPSILON
+        while (diff_distance > DISTANCE_EPSILON
             and self.is_running()):
             # Check if pause
             if self.is_pause:
@@ -200,8 +185,7 @@ class HuskyRobot():
             # Calculate angular vel
             target_angle = self.calculate_angle(current_point, target_point)
             diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
-            
-            if abs(diff_angle) > ANGULAR_MOVING_EPSILON:
+            if diff_distance > DISTANCE_EPSILON * 2.0:
                 self.cmd.angular.z = self.calculate_angular_vel(diff_angle, is_moving=True)
             else:
                 self.cmd.angular.z = 0.0
@@ -212,7 +196,6 @@ class HuskyRobot():
             # Recalcualte distance
             current_point = self.get_current_position()
             d += self.calculate_distance(last_position, current_point)
-            last_diff_distance = diff_distance
             diff_distance = self.calculate_distance(current_point, target_point)
             last_position = current_point
         

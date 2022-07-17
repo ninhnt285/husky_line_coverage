@@ -14,7 +14,7 @@ class Joystick():
         self.joy_subscriber = rospy.Subscriber(self.joy_topic, Joy, self.joy_callback)
         self.is_pause = True
 
-        self.rate = rospy.Rate(1)
+        self.rate = rospy.Rate(rospy.get_param("time_rate", 30))
 
     def joy_callback(self, msg: Joy):
         old_value = self.is_pause
