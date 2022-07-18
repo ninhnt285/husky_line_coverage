@@ -221,6 +221,8 @@ class HuskyRobot():
             point = Point(node["x"] - zero_x, node["y"] - zero_y, 0)
             self.go_to_point(point)
 
+        self.rotate_to_point(Point(1, 0, 0))
+
 if __name__ == "__main__":
     robot = HuskyRobot()
     robot.start()
