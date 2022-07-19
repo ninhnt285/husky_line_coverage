@@ -2,11 +2,10 @@
 from operator import truediv
 from turtle import distance
 import rospy
-from std_msgs.msg import Header, Bool
+from std_msgs.msg import Bool, Int16
 from genpy import Time
 from geometry_msgs.msg import Twist, Point, Vector3, Pose, Quaternion
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import NavSatFix, Imu
 from tf.transformations import euler_from_quaternion
 from math import atan2, degrees, pi, radians, sqrt
 from husky_line_coverage.helpers import load_routes
@@ -33,7 +32,8 @@ class HuskyRobot():
 
         # Publishers
         self.vel_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=1)
-        
+        self.arrived_publisher = rospy.Publisher('/arrived_index', Int16, queue_size=1)
+
         # Subscribers
         self.odom_subscriber = rospy.Subscriber('/odom2', Odometry, self.odom_callback)
         self.pause_subscriber = rospy.Subscriber("/is_pause", Bool, self.pause_callback)
@@ -43,6 +43,7 @@ class HuskyRobot():
         self.rate = rospy.Rate(rospy.get_param("time_rate", 30))
         self.ctrl_c = False
         self.is_pause = True
+        self.is_bag = not rospy.get_param("is_simulation", False) and not rospy.get_param("on_robot", False)
 
         self.cmd = Twist()
         self.cmd.linear.x = 0.0
@@ -209,9 +210,17 @@ class HuskyRobot():
         print("  - Diff(x,y): ", target_point.x - current_point.x, target_point.y - current_point.y)
         print("  - Distance: ", self.calculate_distance(current_point, target_point))
         
+    def arrived_point(self, point: Point):
+        current_point = self.get_current_position()
+        distance = self.calculate_distance(current_point, point)
+        if distance < 1.0:
+            return True
+        return False
+
     def start(self):
         rospy.wait_for_message("/odom2", Odometry)
-        rospy.wait_for_message("/is_pause", Bool)
+        if not self.is_bag:
+            rospy.wait_for_message("/is_pause", Bool)
 
         zero_x = self.routes[0]["x"]
         zero_y = self.routes[0]["y"]
@@ -219,7 +228,14 @@ class HuskyRobot():
         for i in range(len(self.routes)):
             node = self.routes[i]
             point = Point(node["x"] - zero_x, node["y"] - zero_y, 0)
-            self.go_to_point(point)
+            if self.is_bag:
+                while not rospy.is_shutdown() and not self.arrived_point(point):
+                    self.rate.sleep()
+                    continue
+            else:
+                self.go_to_point(point)
+
+            self.arrived_publisher.publish(Int16(i))
 
         self.rotate_to_point(Point(1, 0, 0))
 
