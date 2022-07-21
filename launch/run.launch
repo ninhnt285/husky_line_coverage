@@ -1,8 +1,6 @@
 <launch>
     <arg name="on_robot" default="false" />
     <arg name="is_simulation" default="false" />
-    <arg name="route_dir" default="ww2" />
-
     <arg name="time_rate" default="20" />
     <!-- Robot Speeds -->
     <arg name="distance_epsilon" default="0.15" />
@@ -28,9 +26,9 @@
     <arg name="custom_odom_topic" default="odom2" />
 
     <!-- Data File -->
-    <arg name="node_file" default="$(find husky_line_coverage)/maps/ww2/node_data" />
-    <arg name="route_file" default="$(find husky_line_coverage)/maps/ww2/route" />
-    <!-- <arg name="route_file" default="$(find husky_line_coverage)/maps/ww2/full.json" /> -->
+    <arg name="data_dir" default="ww2" />
+    <arg name="node_file" default="$(find husky_line_coverage)/maps/$(arg data_dir)/node_data" />
+    <arg name="route_file" default="$(find husky_line_coverage)/maps/$(arg data_dir)/route" />
     
     <!-- Params -->
     <param name="is_simulation" value="$(arg is_simulation)" />
