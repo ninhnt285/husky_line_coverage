@@ -5,14 +5,14 @@
 
     <arg name="time_rate" default="20" />
     <!-- Robot Speeds -->
-    <arg name="distance_epsilon" default="0.2" />
+    <arg name="distance_epsilon" default="0.15" />
     <arg name="linear_max_speed" default="1.0" />
     <arg name="linear_min_speed" default="0.1" />
     <arg name="linear_speed_step" default="0.1" />
 
     <arg name="angular_epsilon_degree" default="1.5" />
     <arg name="angular_moving_epsilon_degree" default="1.0" />
-    <arg name="angular_max_speed_degree" default="30" />
+    <arg name="angular_max_speed_degree" default="20" />
     <arg name="angular_min_speed_degree" default="3" />
 
 
@@ -38,6 +38,8 @@
 
     <param name="node_file" value="$(arg node_file)" />
     <param name="route_file" value="$(arg route_file)" />
+
+    <param name="on_robot" value="$(arg on_robot)" />
     
     <param name="imu_topic" value="$(arg imu_topic)" />
     <param name="gps_topic" value="$(arg gps_topic)" />

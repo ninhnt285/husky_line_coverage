@@ -210,7 +210,7 @@ class HuskyRobot():
             # Calculate angular vel
             target_angle = self.calculate_angle(current_point, target_point)
             diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
-            if diff_distance > DISTANCE_EPSILON * 2.0:
+            if diff_distance > 0.2:
                 self.cmd.angular.z = self.calculate_angular_vel(diff_angle, is_moving=True)
             else:
                 self.cmd.angular.z = 0.0
@@ -308,7 +308,6 @@ class HuskyRobot():
                     continue
                 self.arrived_publisher.publish(Int16(i))
             else:
-                # self.go_to_point(point)
                 i = self.go_to_point_2(i)
             i = i + 1
 
