@@ -162,6 +162,7 @@ catkin_install_python(PROGRAMS
   scripts/rviz.py
   scripts/joystick.py
   scripts/husky_robot.py
+  scripts/bag.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

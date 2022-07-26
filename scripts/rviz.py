@@ -25,8 +25,12 @@ class Rviz_Support():
 
         # Simulation
         self.is_simulation = rospy.get_param("is_simulation", False)
+        self.is_bag = rospy.get_param("is_bag", False)
         if self.is_simulation:
             self.root_frame = "odom"
+
+        if self.is_bag:
+            self.root_frame = "map"
 
     def arrived_callback(self, msg: Int16):
         self.arrived_index = msg.data

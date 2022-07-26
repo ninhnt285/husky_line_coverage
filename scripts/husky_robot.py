@@ -29,7 +29,6 @@ class HuskyRobot():
         self.node_file = rospy.get_param("node_file", "./maps/node_data")
         self.route_file = rospy.get_param("route_file", "slc_beta2_atsp/slc_beta2_atsp_route")
         self.routes = load_routes(self.route_file, self.node_file)
-        self.zero_point = Point(self.routes[0]["x"], self.routes[0]["y"], 0)
 
         # Publishers
         self.vel_publisher = rospy.Publisher('/husky_velocity_controller/cmd_vel', Twist, queue_size=1)
@@ -44,7 +43,7 @@ class HuskyRobot():
         self.rate = rospy.Rate(rospy.get_param("time_rate", 30))
         self.ctrl_c = False
         self.is_pause = True
-        self.is_bag = not rospy.get_param("is_simulation", False) and not rospy.get_param("on_robot", False)
+        self.is_bag = rospy.get_param("is_bag", False)
 
         self.cmd = Twist()
         self.cmd.linear.x = 0.0
@@ -83,9 +82,6 @@ class HuskyRobot():
     def get_current_position(self) -> Point:
         return self.odom.position
 
-    def get_target_point(self, index):
-        return Point(self.routes[index]["x"] - self.zero_point.x, self.routes[index]["y"] - self.zero_point.y, 0)
-
     def calculate_distance(self, p1: Point, p2: Point):
         return sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
 
@@ -112,10 +108,7 @@ class HuskyRobot():
         self.rate.sleep()
 
     def calculate_angular_vel(self, diff_angle, is_moving=False):
-        if not is_moving:
-            speed = abs(diff_angle) * 0.5
-        else:
-            speed = abs(diff_angle) * 0.8
+        speed = abs(diff_angle) * 0.5
         
         speed = min(ANGULAR_MAX_SPEED, speed)
 
@@ -130,12 +123,12 @@ class HuskyRobot():
     def calculate_linear_vel(self, diff_distance, current_speed):
         speed = diff_distance * 0.5
 
+        if speed > LINEAR_MAX_SPEED:
+            speed = LINEAR_MAX_SPEED
+
         if current_speed + LINEAR_SPEED_STEP < speed:
             speed = current_speed + LINEAR_SPEED_STEP
 
-        if speed > LINEAR_MAX_SPEED:
-            speed = LINEAR_MAX_SPEED
-            
         return speed
 
     def rotate_to_point(self, target_point: Point):
@@ -158,74 +151,6 @@ class HuskyRobot():
 
         self.stop_robot()
 
-    def print_move_to(self, current_point: Point, target_point: Point):
-        print("-----------")
-        print("Move to:", target_point.x, target_point.y)
-        print("Current point: ", current_point.x, current_point.y)
-
-    def go_to_point_2(self, index):
-        target_point = self.get_target_point(index)
-        updated_next_point = False
-        current_point = self.get_current_position()
-        self.print_move_to(current_point, target_point)
-
-        diff_distance = self.calculate_distance(current_point, target_point)
-        if diff_distance < DISTANCE_EPSILON:
-            self.arrived_publisher.publish(Int16(index))
-            return index
-
-        print("  Rotate to next point: ", diff_distance)
-        self.rotate_to_point(target_point)
-
-        # Calculate distance to next point
-        current_point = self.get_current_position()
-        diff_distance = self.calculate_distance(current_point, target_point)
-        print("  Distance to next point: ", diff_distance)
-
-        while (diff_distance > DISTANCE_EPSILON and self.is_running()):
-            # Check if pause
-            if self.is_pause:
-                self.rate.sleep()
-                continue
-
-            # Update next point
-            if (index < len(self.routes) - 1
-                and diff_distance < LINEAR_MAX_SPEED * 2.0 
-                and not updated_next_point):
-                next_point = self.get_target_point(index + 1)
-                if abs(self.calculate_diff_angle(self.yaw, self.calculate_angle(target_point, next_point))) < radians(10):
-                    self.arrived_publisher.publish(Int16(index))
-                    updated_next_point = False
-                    index = index + 1
-                    
-                    target_point = self.get_target_point(index)
-                    diff_distance = self.calculate_distance(current_point, target_point)
-
-                    self.print_move_to(current_point, target_point)
-                else: # Stop
-                    updated_next_point = True
-
-            # Calculate linear vel
-            self.cmd.linear.x = self.calculate_linear_vel(diff_distance, self.cmd.linear.x)
-            # Calculate angular vel
-            target_angle = self.calculate_angle(current_point, target_point)
-            diff_angle = self.calculate_diff_angle(self.yaw, target_angle)
-            if diff_distance > 0.2:
-                self.cmd.angular.z = self.calculate_angular_vel(diff_angle, is_moving=True)
-            else:
-                self.cmd.angular.z = 0.0
-
-            # Move robot
-            self.vel_publisher.publish(self.cmd)
-            self.rate.sleep()
-            # Recalcualte distance
-            current_point = self.get_current_position()
-            diff_distance = self.calculate_distance(current_point, target_point)
-        
-        self.stop_robot()
-        self.arrived_publisher.publish(Int16(index))
-        self.print_diff_points(current_point, target_point)
-        return index
 
     def go_to_point(self, target_point: Point):
         current_point = self.get_current_position()
@@ -288,7 +213,7 @@ class HuskyRobot():
     def arrived_point(self, point: Point):
         current_point = self.get_current_position()
         distance = self.calculate_distance(current_point, point)
-        if distance < 1.0:
+        if distance < 0.5:
             return True
         return False
 
@@ -297,19 +222,19 @@ class HuskyRobot():
         if not self.is_bag:
             rospy.wait_for_message("/is_pause", Bool)
 
-        i = 0
-        while i < len(self.routes):
+        zero_x = self.routes[0]["x"]
+        zero_y = self.routes[0]["y"]
+        for i in range(len(self.routes)):
             node = self.routes[i]
-            point = Point(node["x"] - self.zero_point.x, node["y"] - self.zero_point.y, 0)
-
+            point = Point(node["x"] - zero_x, node["y"] - zero_y, 0)
             if self.is_bag:
                 while not rospy.is_shutdown() and not self.arrived_point(point):
                     self.rate.sleep()
                     continue
-                self.arrived_publisher.publish(Int16(i))
             else:
-                i = self.go_to_point_2(i)
-            i = i + 1
+                self.go_to_point(point)
+
+            self.arrived_publisher.publish(Int16(i))
 
         self.rotate_to_point(Point(1, 0, 0))
 
