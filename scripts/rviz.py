@@ -42,11 +42,11 @@ class Rviz_Support():
         image = Marker()
         image.header.frame_id = self.root_frame
         image.id = 0
-        image.type = Marker.SPHERE_LIST
+        image.type = Marker.LINE_STRIP
         image.action = Marker.MODIFY
         image.pose.orientation.w = 1.0
-        image.scale.x = 1.0
-        image.scale.y = 1.0
+        image.scale.x = 0.25
+        image.scale.y = 0.25
         image.scale.z = 0.01
         image.ns = "map"
 
@@ -58,25 +58,21 @@ class Rviz_Support():
         for i in range(len(self.routes) - 1):
             start_node = self.routes[i]
             next_node = self.routes[i+1]
-            
-            d = sqrt((start_node["x"] - next_node["x"])**2 + (start_node["y"] - next_node["y"])**2)
-            c = int(d / 1.5) + 1
-            dx = (next_node["x"] - start_node["x"]) / float(c)
-            dy = (next_node["y"] - start_node["y"]) / float(c)
-            for j in range(c + 1):
-                color = new_color
-                if i < self.arrived_index:
-                    color = old_color
-                image.colors.append(color)
 
-                p = Point()
-                p.x = start_node["x"] - center_point.x + dx * float(j)
-                p.y = start_node["y"] - center_point.y + dy * float(j)
-                if i < self.arrived_index:
-                    p.z = -0.1
-                else:
-                    p.z = -0.2
-                image.points.append(p)
+            start_point = Point(start_node["x"] - center_point.x, start_node["y"] - center_point.y, -0.2)
+            end_point = Point(next_node["x"] - center_point.x, next_node["y"] - center_point.y, -0.2)
+
+            if i < self.arrived_index:
+                image.colors.append(old_color)
+                image.colors.append(old_color)
+                start_point.z = -0.1
+                end_point.z = -0.1
+            else:
+                image.colors.append(new_color)
+                image.colors.append(new_color)
+
+            image.points.append(start_point)
+            image.points.append(end_point)
 
         marker_pub.publish(image)
 
