@@ -163,6 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/joystick.py
   scripts/husky_robot.py
   scripts/bag.py
+  scripts/gps.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

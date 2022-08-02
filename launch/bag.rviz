@@ -4,8 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Custom_odom1
         - /Custom_odom1/Shape1
+        - /GPS_Odometry1/Shape1
       Splitter Ratio: 0.42741936445236206
     Tree Height: 1057
   - Class: rviz/Selection
@@ -423,8 +423,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 34.43757629394531
-        Min Value: -2.3165829181671143
+        Max Value: 30.580259323120117
+        Min Value: -2.25587797164917
         Value: true
       Axis: Y
       Channel Name: intensity
@@ -527,7 +527,7 @@ Visualization Manager:
       Marker Topic: map_marker
       Name: Map Marker
       Namespaces:
-        {}
+        map: true
       Queue Size: 100
       Value: true
     - Angle Tolerance: 0.30000001192092896
@@ -616,6 +616,41 @@ Visualization Manager:
       Namespaces:
         map: true
       Queue Size: 100
+      Value: true
+    - Angle Tolerance: 0.30000001192092896
+      Class: rviz/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Keep: 0
+      Name: GPS_Odometry
+      Position Tolerance: 1
+      Queue Size: 10
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 255; 0
+        Head Length: 0.30000001192092896
+        Head Radius: 0.10000000149011612
+        Shaft Length: 0.5
+        Shaft Radius: 0.05000000074505806
+        Value: Arrow
+      Topic: /gps_odom
+      Unreliable: false
       Value: true
   Enabled: true
   Global Options:

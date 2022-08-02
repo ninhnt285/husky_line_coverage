@@ -213,7 +213,7 @@ class HuskyRobot():
     def arrived_point(self, point: Point):
         current_point = self.get_current_position()
         distance = self.calculate_distance(current_point, point)
-        if distance < 0.5:
+        if distance < 1:
             return True
         return False
 
