@@ -2,8 +2,9 @@
     <arg name="on_robot" default="false" />
     <arg name="is_bag" default="false" />
     <arg name="is_simulation" default="false" />
-    <arg name="route_dir" default="ww2" />
+    <arg name="route_dir" default="mem" />
     <arg name="path_shape" default="circle" />
+    <arg name="bag_type" default="new" />
 
     <arg name="time_rate" default="20" />
     <!-- Robot Speeds -->
@@ -37,6 +38,7 @@
     <!-- Params -->
     <param name="on_robot" value="$(arg on_robot)" />
     <param name="is_bag" value="$(arg is_bag)" />
+    <param name="bag_type" value="$(arg bag_type)" />
     <param name="is_simulation" value="$(arg is_simulation)" />
     <param name="time_rate" value="$(arg time_rate)" />
     <param name="path_shape" value="$(arg path_shape)" />
@@ -74,11 +76,14 @@
     </group>
 
     <group if="$(arg is_bag)">
-        <node pkg="tf2_ros" type="static_transform_publisher" name="map_tf"  args="0 0 0 0 0 0 map    odom" />
-        <node pkg="tf2_ros" type="static_transform_publisher" name="camera_init_to_map"  args="-0.291 0.010 0.897 1.570759 0 1.570759 map camera_init" />
-        <node pkg="tf2_ros" type="static_transform_publisher" name="loam_base_tf"  args="-0.291 0.010 0.897  1.570759 0 1.570759 base_loam vel_loam" />
+        <group if="$(eval bag_type == 'new')">
+            <node pkg="tf2_ros" type="static_transform_publisher" name="map_tf"  args="0 0 0 0 0 0 map    odom" />
+            <node pkg="tf2_ros" type="static_transform_publisher" name="camera_init_to_map"  args="-0.291 0.010 0.897 1.570759 0 1.570759 map camera_init" />
+            <node pkg="tf2_ros" type="static_transform_publisher" name="loam_base_tf"  args="-0.291 0.010 0.897  1.570759 0 1.570759 base_loam vel_loam" />
+            <node pkg="husky_line_coverage" name="bag_supporter" type="bag.py" output="screen" />
+        </group>
+
         <node pkg="rviz" type="rviz" name="rviz" args="-d $(find husky_line_coverage)/launch/bag.rviz" />
-        <node pkg="husky_line_coverage" name="bag_supporter" type="bag.py" output="screen" />
         <node pkg="husky_line_coverage" name="gps_odom" type="gps.py" output="screen" />
     </group>
     
