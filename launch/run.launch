@@ -2,13 +2,13 @@
     <arg name="on_robot" default="false" />
     <arg name="is_bag" default="false" />
     <arg name="is_simulation" default="false" />
-    <arg name="route_dir" default="mem" />
+    <arg name="route_dir" default="atsp2" />
     <arg name="path_shape" default="circle" />
     <arg name="bag_type" default="new" />
 
     <arg name="time_rate" default="20" />
     <!-- Robot Speeds -->
-    <arg name="distance_epsilon" default="0.05" />
+    <arg name="distance_epsilon" default="0.15" />
     <arg name="linear_max_speed" default="1.0" />
     <arg name="linear_min_speed" default="0.1" />
     <arg name="linear_speed_step" default="0.1" />
